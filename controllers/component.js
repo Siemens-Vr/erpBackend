@@ -1,5 +1,5 @@
 // const { where } = require('sequelize')
-const { Component, ComponentsQuantity, BorrowedComponent, sequelize  }  = require('../models')
+const { Component, ComponentsQuantity, BorrowedComponent, sequelize ,ConditionDetails }  = require('../models')
 const multer = require('multer');
 const XLSX = require('xlsx');
 const { Op, fn, col } = require('sequelize');
@@ -9,6 +9,14 @@ const Joi = require('joi');
 
 
 
+const uuidSchema = Joi.string()
+  .guid({ version: ['uuidv4'] })
+  .required()
+  .messages({
+    'string.base': 'UUID must be valid.',
+    'string.guid': 'UUID must be a valid UUID.',
+    'any.required': 'UUID is required.'
+  });
 
 
 module.exports.getComponents = async (req, res) => {
@@ -200,41 +208,58 @@ module.exports.getComponentsType = async (req, res) => {
 
 
 module.exports.createComponent = async (req, res) => {
-  console.log(req.body)
-  const { error } = validateComponent(req.body);
-  if (error) {
-    return res.status(400).json({ error: error.details.map(err => err.message) });
-  }
+  console.log(req.body);
 
-  const { componentName, componentType, partNumber,modelNumber, description,  quantity, status, condition, conditionDetails } = req.body;
+  const { componentName, componentType, partNumber, modelNumber, description, quantity, status,  conditions } = req.body;
 
   const transaction = await sequelize.transaction();
 
   try {
-      const component = await Component.create(
-          { componentName, componentType,modelNumber, partNumber,description, status, condition, conditionDetails },
-          { transaction }
+    // Create the component first
+    const component = await Component.create(
+      { componentName, componentType, modelNumber, partNumber, description, status,  },
+      { transaction }
+    );
+
+    if (component) {
+      // Add quantity to ComponentsQuantity table
+      await ComponentsQuantity.create(
+        { componentUUID: component.uuid, quantity },
+        { transaction }
       );
 
-      if (component) {
-          await ComponentsQuantity.create(
-              { componentUUID: component.uuid, quantity },
-              { transaction }
-          );
-
-          await transaction.commit();
-
-          res.status(200).json({ "message": "Component created successfully" });
-      } else {
-          await transaction.rollback();
-          res.status(404).json({ "message": "Error creating component" });
+      if (conditions && conditions.length > 0) {
+        const conditionPromises = conditions.map((cond) =>
+          ConditionDetails.create(
+            {
+              componentId: component.uuid, // Use component.id to link to the component
+              status: cond.status,
+              quantity: cond.quantity,
+              details: cond.details,
+            },
+            { transaction }
+          )
+        );
+        await Promise.all(conditionPromises);
       }
-  } catch (error) {
+
+      // Commit the transaction
+      await transaction.commit();
+
+      res.status(200).json({ message: "Component created successfully" });
+    } else {
+      // Rollback transaction if something went wrong
       await transaction.rollback();
-      console.log(error);
-      res.status(500).json({ "message": "An error occurred" });
+      res.status(404).json({ message: "Error creating component" });
+    }
+  } catch (error) {
+    // Rollback on error
+    await transaction.rollback();
+    console.log(error);
+    res.status(500).json({ message: "An error occurred" });
   }
 };
+
 
 
 module.exports.uploadComponents = async (req, res) => {

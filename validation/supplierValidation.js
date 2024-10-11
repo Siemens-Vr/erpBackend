@@ -83,6 +83,14 @@ const supplierSchema = Joi.object({
     .messages({
       'date.base': 'Enter a valid date for date accounted.',
     }),
+
+    project: Joi.string()
+    .required()
+    .messages({
+      'string.base': 'Enter a valid Project.',
+      'string.empty': 'Project cannot be empty.',
+      'any.required': 'Project is required.',
+    }),
 });
 
 const validateSupplier = (supplier) => {

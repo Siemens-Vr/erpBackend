@@ -1,4 +1,5 @@
 const { Router } = require('express');
+const { Supplier } = require('../models');
 const { 
   getSuppliers, 
   createSupplier, 

@@ -1,8 +1,17 @@
 const {Staff, Leave} = require('../models');
 const models = require('../models')
 const validateStaff = require('../validation/staffValidation'); 
+const Joi = require('joi');
 
 
+const uuidSchema = Joi.string()
+  .guid({ version: ['uuidv4'] })
+  .required()
+  .messages({
+    'string.base': 'UUID must be valid.',
+    'string.guid': 'UUID must be a valid UUID.',
+    'any.required': 'UUID is required.'
+  });
 
 module.exports.getStaff = async (req, res) =>{
 

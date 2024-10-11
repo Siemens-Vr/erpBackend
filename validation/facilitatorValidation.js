@@ -34,6 +34,7 @@ const facilitatorSchema = Joi.object({
 
   gender: Joi.string()
     .valid('Male', 'Female', 'other') 
+    .insensitive()
     .required()
     .messages({
       'string.base': 'Gender must be valid.',
@@ -61,6 +62,12 @@ const facilitatorSchema = Joi.object({
     .messages({
       'string.pattern.base': 'Phone number must be a 10-digit number.',
       'any.required': 'Phone Number is required.',
+    }),
+    project: Joi.string()
+    // .required()
+    .messages({
+      'string.base': 'ID Number must be valid.',
+      'any.required': 'ID Number is required.',
     }),
 });
 

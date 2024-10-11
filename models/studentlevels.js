@@ -22,6 +22,11 @@ module.exports = (sequelize, DataTypes) => {
   }
 
   StudentLevels.init({
+    uuid: {
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+      type: DataTypes.UUID,
+    },
     studentId: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -42,6 +47,25 @@ module.exports = (sequelize, DataTypes) => {
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     },
+    cohortId:{
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'Cohort',
+        key: 'uuid',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
+
+    },
+    fee:{
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
+    examResults:{
+      type: DataTypes.STRING,
+      allowNull: true,
+    }
   }, {
     sequelize,
     modelName: 'StudentLevels',

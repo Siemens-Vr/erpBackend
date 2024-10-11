@@ -50,7 +50,7 @@ const levelSchema = Joi.object({
       'string.guid': 'Cohort ID must be a valid UUID.',
       'any.required': 'Cohort ID is required.',
     }),
-    facilitator: Joi
+    facilitators: Joi
   .required()
 });
 

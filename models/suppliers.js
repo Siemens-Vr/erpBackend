@@ -70,6 +70,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE, 
         allowNull: true,
       },
+      project:{
+        type:DataTypes.STRING,
+        allowNull:true
+      },
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,

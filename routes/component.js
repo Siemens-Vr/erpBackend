@@ -25,8 +25,8 @@ componentsRouter.post('/upload', upload.single('file'), (req, res, next) => {
 }, uploadComponents);
 componentsRouter.get('/components/:componentsType', getComponents);
 componentsRouter.get('/:id', getComponentById);
-componentsRouter.put('/:id/update', updateComponent);
-componentsRouter.put('/:id/update-quantity', updateComponentQuantity);
+componentsRouter.patch('/:id/update', updateComponent);
+componentsRouter.patch('/:id/update-quantity', updateComponentQuantity);
 componentsRouter.delete('/:id', deleteComponent);
 componentsRouter.get('/:id/history', getComponentHistory);
 

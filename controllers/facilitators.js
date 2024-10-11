@@ -1,8 +1,17 @@
 const {Facilitator, HoursWorked} = require('../models');
 const { Op } = require('sequelize');
 const validateFacilitator = require('../validation/facilitatorValidation');
-
+const Joi = require('joi');
 // const facilitator = require('../models/facilitator');
+
+const uuidSchema = Joi.string()
+  .guid({ version: ['uuidv4'] })
+  .required()
+  .messages({
+    'string.base': 'UUID must be valid.',
+    'string.guid': 'UUID must be a valid UUID.',
+    'any.required': 'UUID is required.'
+  });
 
 module.exports.getFacilitators = async (req, res) =>{
     const name = req.query.q

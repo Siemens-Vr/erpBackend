@@ -1,6 +1,15 @@
 const { StudentLevels, Facilitator, Student,Level, LevelFacilitators , HoursWorked} = require('../models');
 const validateLevel = require('../validation/levelValidation'); 
+const Joi = require('joi');
 
+const uuidSchema = Joi.string()
+  .guid({ version: ['uuidv4'] })
+  .required()
+  .messages({
+    'string.base': 'UUID must be valid.',
+    'string.guid': 'UUID must be a valid UUID.',
+    'any.required': 'UUID is required.'
+  });
 
 module.exports.getLevels = async (req, res) => {
   try {
@@ -12,10 +21,6 @@ module.exports.getLevels = async (req, res) => {
 };
 
 module.exports.createLevel = async (req, res) => {
-  const { error } = validateLevel(req.body);
-  if (error) {
-    return res.status(400).json({ error: error.details.map(err => err.message) });
-  }
 
   const { levelName, startDate, endDate, cohortId, exam_dates, exam_quotation_number, facilitators } = req.body;
   let leveldata;
@@ -97,8 +102,10 @@ module.exports.getLevelDataById = async (req, res) => {
       examQuotationNumber: level.exam_quotation_number,
       students: level.studentLevels.map((sl) => sl.student),
       facilitators: level.facilitators.map((facilitator) => ({
+        uuid:facilitator.uuid,
         firstName: facilitator.firstName,
         lastName: facilitator.lastName,
+        phone:facilitator.phoneNo,
         specification: facilitator.LevelFacilitators.specification, // Access specification through the join table
       })),
     };

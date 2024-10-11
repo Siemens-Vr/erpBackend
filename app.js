@@ -14,6 +14,9 @@ const notificationRoutes = require('./routes/job'); // Adjust the path as necess
 const categoriesRouter = require('./routes/categories')
 const itemsRoutes = require('./routes/itemsRoutes')
 const supplierRouter = require('./routes/suppliers');
+const projectsRouter = require('./routes/projects');
+const feeRouter = require('./routes/fee')
+
 
 
 
@@ -53,7 +56,11 @@ app.use('/notifications', notificationsRouter)
 app.use('/categories', categoriesRouter)
 app.use('/job', notificationRoutes)
 app.use('/items', itemsRoutes);
-app.use('/supplier', supplierRouter);
+app.use('/suppliers', supplierRouter);
+
+app.use('/projects', projectsRouter)
+app.use('/fee', feeRouter)
+
 
 
 
