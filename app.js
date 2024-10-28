@@ -18,7 +18,11 @@ const categoriesRouter = require('./routes/categories');
 const itemsRoutes = require('./routes/itemsRoutes');
 const supplierRouter = require('./routes/suppliers');
 const projectsRouter = require('./routes/projects');
+const phasesRouter = require('./routes/phases');
+const assigneesRouter = require('./routes/assignees');
+const deliverablesRouter = require('./routes/deliverables');
 const feeRouter = require('./routes/fee');
+
 
 // Import the authentication middleware
 const isAuthenticated = require('./middleware/isAuthenticated');  // Adjust the path if necessary
@@ -49,7 +53,10 @@ app.use('/categories', isAuthenticated, categoriesRouter);
 app.use('/job', isAuthenticated, notificationRoutes);
 app.use('/items', isAuthenticated, itemsRoutes);
 app.use('/suppliers', isAuthenticated, supplierRouter);
-app.use('/projects', isAuthenticated, projectsRouter);
+app.use('/projects', projectsRouter);
+app.use('/phases', phasesRouter);
+app.use('/assignees', assigneesRouter);
+app.use('/deliverables', deliverablesRouter);
 app.use('/fee', isAuthenticated, feeRouter);
 
 // Test route to verify server is running

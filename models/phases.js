@@ -2,16 +2,20 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class Deliverable extends Model {
-    static associate({ Phase }) {
-      this.belongsTo(Phase, {
+  class Phase extends Model {
+    static associate({ Project, Deliverable }) {
+      this.belongsTo(Project, {
+        foreignKey: 'projectId',
+        as: 'project',
+      });
+      this.hasMany(Deliverable, {
         foreignKey: 'phaseId',
-        as: 'phase',
+        as: 'deliverables',
       });
     }
   }
 
-  Deliverable.init({
+  Phase.init({
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -26,16 +30,16 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    status: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
     startDate: {
       type: DataTypes.DATE,
       allowNull: true,
     },
-    expectedFinish: {
+    endDate: {
       type: DataTypes.DATE,
+      allowNull: true,
+    },
+    status: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
     createdAt: {
@@ -48,8 +52,8 @@ module.exports = (sequelize, DataTypes) => {
     },
   }, {
     sequelize,
-    modelName: 'Deliverable',
+    modelName: 'Phase',
   });
 
-  return Deliverable;
+  return Phase;
 };
