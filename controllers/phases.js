@@ -1,7 +1,10 @@
 const { Project, Phase, Deliverable, sequelize } = require('../models'); 
 
 
-const createPhase = async (req, res) => {
+const validatePhase = require('../validation/phaseValidation');
+const validateDeliverable = require('../validation/deliverableValidation');
+
+module.exports.createPhase = async (req, res) => {
   const { uuid } = req.params;
   const phases = req.body.phases;
 
@@ -15,10 +18,17 @@ const createPhase = async (req, res) => {
       return res.status(404).json({ message: 'Project not found' });
     }
 
-    // Loop through each phase and create it along with its deliverables within the transaction
+    // Loop through each phase, validate, and create it along with its deliverables
     const createdPhases = await Promise.all(
       phases.map(async (phaseData) => {
         const { name, startDate, endDate, status, deliverables } = phaseData;
+
+        // Validate phase data
+        const { error: phaseError } = validatePhase({ name, startDate, endDate, status });
+        if (phaseError) {
+          await transaction.rollback();
+          return res.status(400).json({ message: 'Phase validation error', details: phaseError.details });
+        }
 
         // Create the phase associated with the project ID
         const phase = await Phase.create(
@@ -32,23 +42,26 @@ const createPhase = async (req, res) => {
           { transaction }
         );
 
-        // If deliverables are provided, create each associated with the phase ID
+        // If deliverables are provided, validate and create each associated with the phase ID
         if (deliverables && Array.isArray(deliverables)) {
-          const createdDeliverables = await Promise.all(
-            deliverables.map((deliverable) =>
-              Deliverable.create(
-                {
-                  name: deliverable.name,
-                  status: deliverable.status,
-                  startDate: deliverable.startDate,
-                  expectedFinish: deliverable.expectedFinish,
-                  phaseId: phase.uuid,
-                },
-                { transaction }
-              )
-            )
-          );
-          phase.dataValues.deliverables = createdDeliverables; 
+          const validDeliverables = [];
+          for (const deliverable of deliverables) {
+            const { error: deliverableError } = validateDeliverable(deliverable);
+            if (deliverableError) {
+              await transaction.rollback();
+              return res.status(400).json({ message: 'Deliverable validation error', details: deliverableError.details });
+            }
+            validDeliverables.push({
+              name: deliverable.name,
+              status: deliverable.status,
+              startDate: deliverable.startDate,
+              expectedFinish: deliverable.expectedFinish,
+              phaseId: phase.uuid,
+            });
+          }
+
+          const createdDeliverables = await Deliverable.bulkCreate(validDeliverables, { transaction });
+          phase.dataValues.deliverables = createdDeliverables;
         }
 
         return phase;
@@ -64,8 +77,8 @@ const createPhase = async (req, res) => {
     res.status(500).json({ message: 'Failed to create phases and deliverables', error: error.message });
   }
 };
-  
-  const getAllPhases = async (req, res) => {
+
+module.exports.getAllPhases = async (req, res) => {
     const { uuid } = req.params;
   
     try {
@@ -84,7 +97,7 @@ const createPhase = async (req, res) => {
   };
   
 
-  const getPhaseById = async (req, res) => {
+  module.exports.getPhaseById = async (req, res) => {
     const { uuid, phaseId } = req.params;
   
     try {
@@ -102,7 +115,7 @@ const createPhase = async (req, res) => {
     }
   };
 
-  const updatePhase = async (req, res) => {
+  module.exports.updatePhase = async (req, res) => {
     const { uuid } = req.params; 
     const { phases } = req.body; 
   
@@ -119,6 +132,13 @@ const createPhase = async (req, res) => {
       for (const phaseData of phases) {
         const { phaseId, name, startDate, endDate, status, deliverables } = phaseData;
   
+        // Validate phase data
+        const { error: phaseError } = validatePhase({ name, startDate, endDate, status });
+        if (phaseError) {
+          await transaction.rollback();
+          return res.status(400).json({ message: 'Phase validation error', details: phaseError.details });
+        }
+  
         // Find and update the phase
         const phase = await Phase.findOne({ where: { uuid: phaseId, projectId: project.uuid }, transaction });
         if (!phase) {
@@ -129,10 +149,17 @@ const createPhase = async (req, res) => {
         // Update phase details
         await phase.update({ name, startDate, endDate, status }, { transaction });
   
-        // Check if deliverables are provided for the phase
-        if (deliverables && deliverables.length > 0) {
+        // If deliverables are provided, validate and update each deliverable
+        if (deliverables && Array.isArray(deliverables)) {
           for (const deliverableData of deliverables) {
             const { deliverableId, name, status, startDate, expectedFinish } = deliverableData;
+  
+            // Validate deliverable data
+            const { error: deliverableError } = validateDeliverable({ name, status, startDate, expectedFinish });
+            if (deliverableError) {
+              await transaction.rollback();
+              return res.status(400).json({ message: 'Deliverable validation error', details: deliverableError.details });
+            }
   
             // Find and update each deliverable
             const deliverable = await Deliverable.findOne({
@@ -159,7 +186,7 @@ const createPhase = async (req, res) => {
     }
   };
   
-  const deletePhase = async (req, res) => {
+  module.exports.deletePhase = async (req, res) => {
     const { uuid } = req.params;
     const { phaseId } = req.body;
   
@@ -179,12 +206,5 @@ const createPhase = async (req, res) => {
     }
   };
 
-  module.exports = {
-    createPhase,
-    getAllPhases,
-    getPhaseById,
-    updatePhase,
-    deletePhase
-  };
   
   

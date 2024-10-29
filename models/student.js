@@ -81,6 +81,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Student',
+    schema: 'students',
   });
 
   return Student;

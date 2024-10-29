@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: false,
       },
+      schema: 'users', 
     });
   
     RefreshToken.associate = (models) => {

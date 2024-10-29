@@ -49,13 +49,13 @@ const assigneeSchema = Joi.object({
       'date.less': 'Date Joined must be in the past.',
       'any.required': 'Date Joined is required.',
     }),
-    projectId: Joi.string()
-    .guid({ version: ['uuidv4'] })
-    .required()
-    .messages({
-      'string.guid': 'Project ID must be a valid UUID.',
-      'any.required': 'Project ID is required.',
-    }),
+    // projectId: Joi.string()
+    // .guid({ version: ['uuidv4'] })
+    // .required()
+    // .messages({
+    //   'string.guid': 'Project ID must be a valid UUID.',
+    //   'any.required': 'Project ID is required.',
+    // }),
 });
 
 

@@ -46,13 +46,13 @@ const deliverableSchema = Joi.object({
       'any.required': 'Desciption is required.',
     }),
 
-  phaseId: Joi.string()
-    .guid({ version: ['uuidv4'] })
-    .required()
-    .messages({
-      'string.guid': 'Phase ID must be a valid UUID.',
-      'any.required': 'Phase ID is required.',
-    }),
+  // phaseId: Joi.string()
+  //   .guid({ version: ['uuidv4'] })
+  //   .required()
+  //   .messages({
+  //     'string.guid': 'Phase ID must be a valid UUID.',
+  //     'any.required': 'Phase ID is required.',
+  //   }),
 });
 
 const validateDeliverable = (data) => {

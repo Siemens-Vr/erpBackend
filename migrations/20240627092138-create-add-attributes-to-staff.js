@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.addColumn('Staffs', 'leaveDays', {
+    await queryInterface.addColumn({ schema: 'students', tableName: 'Staffs' }, 'leaveDays', {
       type: Sequelize.INTEGER,
       allowNull: true,
     });
@@ -12,6 +12,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('Staffs', 'leaveDays');
+    await queryInterface.removeColumn({ schema: 'students', tableName: 'Staffs' },  'leaveDays');
   },
 };

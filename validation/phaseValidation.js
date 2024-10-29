@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const validateDeliverable  = require('./deliverableValidation'); 
 
 const phaseSchema = Joi.object({  
     name: Joi.string()
@@ -14,10 +15,10 @@ const phaseSchema = Joi.object({
       }),
   
     status: Joi.string()
-      .valid('Planned', 'In Progress', 'Completed', 'On Hold')
+      .valid('todo', 'progress', 'completed')
       .required()
       .messages({
-        'any.only': 'Status must be one of: Planned, In Progress, Completed, On Hold.',
+        'any.only': 'Status must be one of: todo, progress, Completed.',
         'any.required': 'Status is required.',
       }),
   
@@ -37,13 +38,16 @@ const phaseSchema = Joi.object({
         'any.required': 'End Date is required.',
       }),
   
-    projectId: Joi.string()
-      .guid({ version: ['uuidv4'] })
-      .required()
-      .messages({
-        'string.guid': 'Project ID must be a valid UUID.',
-        'any.required': 'Project ID is required.',
-      }),
+    // projectId: Joi.string()
+    //   .guid({ version: ['uuidv4'] })
+    //   .required()
+    //   .messages({
+    //     'string.guid': 'Project ID must be a valid UUID.',
+    //     'any.required': 'Project ID is required.',
+    //   }),
+    deliverables: Joi.array()
+    .items(validateDeliverable)  
+    .optional(), 
   });
   
   const validatePhase = (data) => {

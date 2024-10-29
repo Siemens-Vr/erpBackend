@@ -1,7 +1,11 @@
 const { Deliverable, Phase, Project, sequelize } = require('../models');
 
+const validateDeliverable = require('../validation/deliverableValidation');
+const Joi = require('joi');
+
+
 // Create Deliverables
-const createDeliverable = async (req, res) => {
+module.exports.createDeliverable = async (req, res) => {
     const { uuid, phaseId } = req.params;
     const { deliverables } = req.body;
 
@@ -16,10 +20,18 @@ const createDeliverable = async (req, res) => {
         const phase = await Phase.findOne({ where: { uuid: phaseId, projectId: project.uuid } });
         if (!phase) return res.status(404).json({ message: 'Phase not found' });
 
-        // Create Deliverables
-        const deliverableData = deliverables.map(deliverable => ({ ...deliverable, phaseId }));
+        // Validate each deliverable
+        const validDeliverables = [];
+        for (const deliverable of deliverables) {
+            const { error } = validateDeliverable(deliverable);
+            if (error) {
+                return res.status(400).json({ message: 'Validation error', details: error.details });
+            }
+            validDeliverables.push({ ...deliverable, phaseId });
+        }
 
-        await Deliverable.bulkCreate(deliverableData, { transaction });
+        // Create deliverables if validation passes
+        await Deliverable.bulkCreate(validDeliverables, { transaction });
 
         await transaction.commit();
         res.status(201).json({ message: 'Deliverables created successfully' });
@@ -29,8 +41,9 @@ const createDeliverable = async (req, res) => {
     }
 };
 
+
 // Get all Deliverables
-const getAllDeliverables = async (req, res) => {
+module.exports.getAllDeliverables = async (req, res) => {
     const { uuid, phaseId } = req.params;
 
     try {
@@ -48,7 +61,7 @@ const getAllDeliverables = async (req, res) => {
 };
 
 // Get Deliverable by ID
-const getDeliverableById = async (req, res) => {
+module.exports.getDeliverableById = async (req, res) => {
     const { uuid, phaseId, deliverableId } = req.params;
 
     try {
@@ -68,7 +81,7 @@ const getDeliverableById = async (req, res) => {
 };
 
 // Update Deliverable
-const updateDeliverable = async (req, res) => {
+module.exports.updateDeliverable = async (req, res) => {
     const { uuid, phaseId, deliverableId } = req.params;
     const { name, status, startDate, expectedFinish } = req.body;
 
@@ -95,7 +108,7 @@ const updateDeliverable = async (req, res) => {
 };
 
 // Delete Deliverable
-const deleteDeliverable = async (req, res) => {
+module.exports.deleteDeliverable = async (req, res) => {
     const { uuid, phaseId, deliverableId } = req.params;
 
     const transaction = await sequelize.transaction();
@@ -118,12 +131,4 @@ const deleteDeliverable = async (req, res) => {
         await transaction.rollback();
         res.status(500).json({ message: 'Failed to delete deliverable', error: error.message });
     }
-};
-
-module.exports = {
-    createDeliverable,
-    getAllDeliverables,
-    getDeliverableById,
-    updateDeliverable,
-    deleteDeliverable
 };

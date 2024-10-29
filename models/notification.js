@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Notification',
+    schema: 'equipments',
   });
   return Notification;
 };

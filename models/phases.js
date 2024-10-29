@@ -31,16 +31,16 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     startDate: {
-      type: DataTypes.DATE,
-      allowNull: true,
+      type: DataTypes.DATEONLY,
+      allowNull: false,
     },
     endDate: {
-      type: DataTypes.DATE,
-      allowNull: true,
+      type: DataTypes.DATEONLY,
+      allowNull: false,
     },
     status: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
     },
     createdAt: {
       allowNull: false,
@@ -53,6 +53,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Phase',
+    schema: 'projects',
   });
 
   return Phase;

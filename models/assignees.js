@@ -53,6 +53,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Assignee',
+    schema: 'projects',
   });
 
   return Assignee;

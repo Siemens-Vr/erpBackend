@@ -1,7 +1,9 @@
 const { Assignee, Project, sequelize } = require('../models');
+const validateAssignee = require('../validation/assigneeValidation');
+const Joi = require('joi');
 
 // Create Assignees
-const createAssignee = async (req, res) => {
+module.exports.createAssignee = async (req, res) => {
     const { uuid } = req.params;
     const { assignees } = req.body;
 
@@ -12,10 +14,18 @@ const createAssignee = async (req, res) => {
         const project = await Project.findOne({ where: { uuid } });
         if (!project) return res.status(404).json({ message: 'Project not found' });
 
-        // Create Assignees
-        const assigneeData = assignees.map(assignee => ({ ...assignee, projectId: project.uuid }));
+        // Validate each assignee
+        const validAssignees = [];
+        for (const assignee of assignees) {
+            const { error } = validateAssignee(assignee);
+            if (error) {
+                return res.status(400).json({ message: 'Validation error', details: error.details });
+            }
+            validAssignees.push({ ...assignee, projectId: project.uuid });
+        }
 
-        await Assignee.bulkCreate(assigneeData, { transaction });
+        // Create Assignees if validation passes
+        await Assignee.bulkCreate(validAssignees, { transaction });
 
         await transaction.commit();
         res.status(201).json({ message: 'Assignees created successfully' });
@@ -26,7 +36,7 @@ const createAssignee = async (req, res) => {
 };
 
 // Get all Assignees
-const getAllAssignees = async (req, res) => {
+module.exports.getAllAssignees = async (req, res) => {
     const { uuid } = req.params;
 
     try {
@@ -41,7 +51,7 @@ const getAllAssignees = async (req, res) => {
 };
 
 // Get Assignee by ID
-const getAssigneeById = async (req, res) => {
+module.exports.getAssigneeById = async (req, res) => {
     const { uuid, assigneeId } = req.params;
 
     try {
@@ -57,20 +67,28 @@ const getAssigneeById = async (req, res) => {
     }
 };
 
+
 // Update Assignee
-const updateAssignee = async (req, res) => {
-    const { uuid ,assigneeId} = req.params;
+module.exports.updateAssignee = async (req, res) => {
+    const { uuid, assigneeId } = req.params;
     const { name, gender, access, role, dateJoined } = req.body;
 
     const transaction = await sequelize.transaction();
 
     try {
+        // Find the project by UUID
         const project = await Project.findOne({ where: { uuid } });
         if (!project) return res.status(404).json({ message: 'Project not found' });
 
+        // Find the assignee by UUID and project ID
         const assignee = await Assignee.findOne({ where: { uuid: assigneeId, projectId: project.uuid } });
         if (!assignee) return res.status(404).json({ message: 'Assignee not found' });
 
+        // Validate the assignee update data
+        const { error } = validateAssignee({ name, gender, access, role, dateJoined });
+        if (error) return res.status(400).json({ message: 'Validation error', details: error.details });
+
+        // Update the assignee if validation passes
         await assignee.update({ name, gender, access, role, dateJoined }, { transaction });
 
         await transaction.commit();
@@ -82,7 +100,7 @@ const updateAssignee = async (req, res) => {
 };
 
 // Delete Assignee
-const deleteAssignee = async (req, res) => {
+module.exports.deleteAssignee = async (req, res) => {
     const { uuid, assigneeId } = req.params;
 
     const transaction = await sequelize.transaction();
@@ -104,10 +122,3 @@ const deleteAssignee = async (req, res) => {
     }
 };
 
-module.exports = {
-    createAssignee,
-    getAllAssignees,
-    getAssigneeById,
-    updateAssignee,
-    deleteAssignee
-};

@@ -1,62 +1,142 @@
 const { Project, Assignee, Phase, Deliverable, sequelize } = require('../models'); 
 const path = require('path');
+const validateProject = require('../validation/projectValidation');
+const validateAssignee = require('../validation/assigneeValidation');
+const validatePhase = require('../validation/phaseValidation');
+const validateDeliverable = require('../validation/deliverableValidation');
 
-const createProject = async (req, res) => {
-  const { name, description, status, budget, funding, startDate, endDate, assignees, phases } = req.body;
+module.exports.createProject = async (req, res) => {
+  const { name, description, status, budget, funding, startDate, endDate, assignees, phases, deliverables } = req.body;
 
-  const transaction = await sequelize.transaction(); 
+  // Step 1: Validate project data
+  const { error: projectError } = validateProject({ name, description, status, budget, funding, startDate, endDate });
+  if (projectError) {
+    return res.status(400).json({ message: 'Project validation error', details: projectError.details });
+  }
+
+  // Step 2: Early validation of deliverables structure
+  if (deliverables && deliverables.length > 0 && (!phases || phases.length === 0)) {
+    return res.status(400).json({ 
+      message: 'Invalid project structure', 
+      details: 'Deliverables cannot be created without associated phases. Please create phases first and assign deliverables to specific phases.'
+    });
+  }
+
+  const transaction = await sequelize.transaction();
 
   try {
     // Get file path from multer (if file is uploaded)
     const documentPath = req.file ? req.file.path : null;
 
-    // Step 1: Create the project with document path if provided
-    const project = await Project.create(
-      {
-        name,
-        description,
-        status,
-        budget,
-        funding,
-        startDate,
-        endDate,
-        documentPath, 
-      },
-      { transaction }
-    );
+    // Step 3: Create the project with document path if provided
+    let project;
+    try {
+      project = await Project.create(
+        {
+          name,
+          description,
+          status,
+          budget,
+          funding,
+          startDate,
+          endDate,
+          documentPath,
+        },
+        { transaction }
+      );
+    } catch (error) {
+      await transaction.rollback();
+      return res.status(400).json({ message: 'Failed to create project', error: error.message });
+    }
 
-    // Step 2: Create Assignees if provided
+    // Verify project was created successfully
+    if (!project || !project.uuid) {
+      await transaction.rollback();
+      return res.status(400).json({ message: 'Project creation failed - invalid project data' });
+    }
+
+    // Step 4: Validate and Create Assignees if provided (only if project exists)
     if (assignees && assignees.length > 0) {
+      // Validate all assignees first before creating any
+      for (const assignee of assignees) {
+        const { error: assigneeError } = validateAssignee(assignee);
+        if (assigneeError) {
+          await transaction.rollback();
+          return res.status(400).json({ message: 'Assignee validation error', details: assigneeError.details });
+        }
+      }
+
       const assigneeData = assignees.map((assignee) => ({
         ...assignee,
         projectId: project.uuid,
       }));
 
-      await Assignee.bulkCreate(assigneeData, { transaction });
+      try {
+        await Assignee.bulkCreate(assigneeData, { transaction });
+      } catch (error) {
+        await transaction.rollback();
+        return res.status(400).json({ message: 'Failed to create assignees', error: error.message });
+      }
     }
 
-    // Step 3: Create Phases and Deliverables if provided
+    // Step 5: Validate and Create Phases and Deliverables if provided
     if (phases && phases.length > 0) {
+      // Validate all phases first before creating any
       for (const phase of phases) {
-        const phaseRecord = await Phase.create(
-          {
-            name: phase.name,
-            startDate: phase.startDate,
-            endDate: phase.endDate,
-            status: phase.status,
-            projectId: project.uuid,
-          },
-          { transaction }
-        );
+        const { error: phaseError } = validatePhase(phase);
+        if (phaseError) {
+          await transaction.rollback();
+          return res.status(400).json({ message: 'Phase validation error', details: phaseError.details });
+        }
+      }
 
-        // Step 4: Create Deliverables for each Phase if provided
+      // Create phases and their deliverables
+      for (const phase of phases) {
+        let phaseRecord;
+        try {
+          phaseRecord = await Phase.create(
+            {
+              name: phase.name,
+              startDate: phase.startDate,
+              endDate: phase.endDate,
+              status: phase.status,
+              projectId: project.uuid,
+            },
+            { transaction }
+          );
+        } catch (error) {
+          await transaction.rollback();
+          return res.status(400).json({ message: 'Failed to create phase', error: error.message });
+        }
+
+        // Verify phase was created successfully
+        if (!phaseRecord || !phaseRecord.uuid) {
+          await transaction.rollback();
+          return res.status(400).json({ message: 'Phase creation failed - invalid phase data' });
+        }
+
+        // Create Deliverables for each Phase if provided
         if (phase.deliverables && phase.deliverables.length > 0) {
+          // Validate all deliverables first before creating any
+          for (const deliverable of phase.deliverables) {
+            const { error: deliverableError } = validateDeliverable(deliverable);
+            if (deliverableError) {
+              await transaction.rollback();
+              return res.status(400).json({ message: 'Deliverable validation error', details: deliverableError.details });
+            }
+          }
+
           const deliverableData = phase.deliverables.map((deliverable) => ({
             ...deliverable,
             phaseId: phaseRecord.uuid,
           }));
 
-          await Deliverable.bulkCreate(deliverableData, { transaction });
+          try {
+            await Deliverable.bulkCreate(deliverableData, { transaction });
+          } catch (error) {
+            await transaction.rollback();
+            return res.status(400).json({ message: 'Failed to create deliverables', error: error.message });
+          }
         }
       }
     }
@@ -71,7 +151,7 @@ const createProject = async (req, res) => {
   }
 };
 
-const getAllProjects = async (req, res) => {
+module.exports.getAllProjects = async (req, res) => {
   try {
     const projects = await Project.findAll({
       include: [
@@ -112,7 +192,7 @@ const getAllProjects = async (req, res) => {
   }
 };
 
-const getProjectById = async (req, res) => {
+module.exports.getProjectById = async (req, res) => {
   const { uuid} = req.params;
 
   try {
@@ -158,9 +238,16 @@ const getProjectById = async (req, res) => {
     res.status(500).json({ message: 'Failed to retrieve project', error: error.message });
   }
 };
-const updateProject = async (req, res) => {
+
+module.exports.updateProject = async (req, res) => {
   const { uuid } = req.params;
   const { name, description, status, budget, funding, startDate, endDate, assignees, phases } = req.body;
+
+  // Validate main project data
+  const { error: projectError } = validateProject({ name, description, status, budget, funding, startDate, endDate });
+  if (projectError) {
+    return res.status(400).json({ message: 'Validation failed for project', error: projectError.details });
+  }
 
   const transaction = await sequelize.transaction();
   try {
@@ -171,20 +258,29 @@ const updateProject = async (req, res) => {
     }
 
     // Update project fields
-    await project.update({
-      name,
-      description,
-      status,
-      budget,
-      funding,
-      startDate,
-      endDate,
-      documentPath: req.file ? req.file.path : project.documentPath,
-    }, { transaction });
+    await project.update(
+      {
+        name,
+        description,
+        status,
+        budget,
+        funding,
+        startDate,
+        endDate,
+        documentPath: req.file ? req.file.path : project.documentPath,
+      },
+      { transaction }
+    );
 
     // Step 2: Update Assignees if provided
     if (assignees) {
       for (const assignee of assignees) {
+        const { error: assigneeError } = validateAssignee(assignee);
+        if (assigneeError) {
+          await transaction.rollback();
+          return res.status(400).json({ message: 'Validation failed for assignee', error: assigneeError.details });
+        }
+
         if (assignee.uuid) {
           // Update existing assignee
           await Assignee.update(assignee, {
@@ -193,10 +289,13 @@ const updateProject = async (req, res) => {
           });
         } else {
           // Add new assignee
-          await Assignee.create({
-            ...assignee,
-            projectId: uuid,
-          }, { transaction });
+          await Assignee.create(
+            {
+              ...assignee,
+              projectId: uuid,
+            },
+            { transaction }
+          );
         }
       }
     }
@@ -204,44 +303,65 @@ const updateProject = async (req, res) => {
     // Step 3: Update Phases if provided
     if (phases) {
       for (const phase of phases) {
+        const { error: phaseError } = validatePhase(phase);
+        if (phaseError) {
+          await transaction.rollback();
+          return res.status(400).json({ message: `Validation failed for phase`, error: phaseError.details });
+        }
+
         let phaseRecord;
         if (phase.uuid) {
-          // Check if the phase exists for this project
+          // Update an existing phase
           phaseRecord = await Phase.findOne({
             where: { uuid: phase.uuid, projectId: uuid },
             transaction,
           });
           if (!phaseRecord) {
+            await transaction.rollback();
             return res.status(404).json({ message: `Phase with uuid ${phase.uuid} not found` });
           }
           await phaseRecord.update(phase, { transaction });
         } else {
           // Add new phase
-          phaseRecord = await Phase.create({
-            ...phase,
-            projectId: uuid,
-          }, { transaction });
+          phaseRecord = await Phase.create(
+            {
+              ...phase,
+              projectId: uuid,
+            },
+            { transaction }
+          );
         }
 
         // Step 4: Update or Create Deliverables if provided
         if (phase.deliverables) {
           for (const deliverable of phase.deliverables) {
+            const { error: deliverableError } = validateDeliverable(deliverable);
+            if (deliverableError) {
+              await transaction.rollback();
+              return res.status(400).json({ message: `Validation failed for deliverable`, error: deliverableError.details });
+            }
+
             if (deliverable.uuid) {
-              // Ensure deliverable is associated with an existing phase
               const existingDeliverable = await Deliverable.findOne({
                 where: { uuid: deliverable.uuid, phaseId: phaseRecord.uuid },
                 transaction,
               });
               if (!existingDeliverable) {
-                return res.status(404).json({ message: `Deliverable with uuid ${deliverable.uuid} not found for the phase ${phaseRecord.uuid}` });
+                await transaction.rollback();
+                return res.status(404).json({
+                  message: `Deliverable with uuid ${deliverable.uuid} not found for phase ${phaseRecord.uuid}`,
+                });
               }
               await existingDeliverable.update(deliverable, { transaction });
             } else {
               // Add new deliverable to the existing phase
-              await Deliverable.create({
-                ...deliverable,
-                phaseId: phaseRecord.uuid,
-              }, { transaction });
+              await Deliverable.create(
+                {
+                  ...deliverable,
+                  phaseId: phaseRecord.uuid,
+                },
+                { transaction }
+              );
             }
           }
         }
@@ -259,7 +379,7 @@ const updateProject = async (req, res) => {
 };
 
 
-const deleteProject = async (req, res) => {
+module.exports.deleteProject = async (req, res) => {
   const { uuid } = req.params;
   const transaction = await sequelize.transaction();
 
@@ -306,5 +426,3 @@ const deleteProject = async (req, res) => {
   }
 };
 
-
-module.exports = { createProject, getProjectById, getAllProjects, updateProject, deleteProject };
