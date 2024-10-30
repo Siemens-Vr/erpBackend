@@ -12,18 +12,31 @@ const storage = multer.diskStorage({
   },
 });
 
-// Filter files by type (optional, e.g., only PDF files)
+// Filter files by type to accept specific document formats
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'application/pdf' || file.mimetype.startsWith('image/')) {
+  const allowedTypes = [
+    'application/pdf',
+    'application/msword',                          // .doc
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',       // .xlsx
+    'application/vnd.ms-excel',                     // .xls
+    'application/vnd.ms-powerpoint',                // .ppt
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
+    'text/plain',                                   // .txt
+    'image/jpeg',                                   // .jpg or .jpeg
+    'image/png'                                     // .png
+  ];
+
+  if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only PDFs and images are allowed'), false);
+    cb(new Error('Only specific document formats (PDF, DOC, DOCX, XLSX, PPTX, TXT) and images (JPEG, PNG) are allowed'), false);
   }
 };
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 1024 * 1024 * 5 },
+  limits: { fileSize: 1024 * 1024 * 5 }, // Limit to 5 MB
   fileFilter: fileFilter,
 });
 
