@@ -11,12 +11,12 @@ module.exports.createProject = async (req, res) => {
   // Step 1: Validate project data
   const { error: projectError } = validateProject({ name, description, status, budget, funding, startDate, endDate });
   if (projectError) {
-    return res.status(400).json({ message: 'Project validation error', details: projectError.details });
+    return res.status(500).json({ message: 'Project validation error', details: projectError.details });
   }
 
   // Step 2: Early validation of deliverables structure
   if (deliverables && deliverables.length > 0 && (!phases || phases.length === 0)) {
-    return res.status(400).json({ 
+    return res.status(500).json({ 
       message: 'Invalid project structure', 
       details: 'Deliverables cannot be created without associated phases. Please create phases first and assign deliverables to specific phases.'
     });
@@ -46,13 +46,13 @@ module.exports.createProject = async (req, res) => {
       );
     } catch (error) {
       await transaction.rollback();
-      return res.status(400).json({ message: 'Failed to create project', error: error.message });
+      return res.status(500).json({ message: 'Failed to create project', error: error.message });
     }
 
     // Verify project was created successfully
     if (!project || !project.uuid) {
       await transaction.rollback();
-      return res.status(400).json({ message: 'Project creation failed - invalid project data' });
+      return res.status(500).json({ message: 'Project creation failed - invalid project data' });
     }
 
     // Step 4: Validate and Create Assignees if provided (only if project exists)
@@ -62,7 +62,7 @@ module.exports.createProject = async (req, res) => {
         const { error: assigneeError } = validateAssignee(assignee);
         if (assigneeError) {
           await transaction.rollback();
-          return res.status(400).json({ message: 'Assignee validation error', details: assigneeError.details });
+          return res.status(500).json({ message: 'Assignee validation error', details: assigneeError.details });
         }
       }
 
@@ -75,7 +75,7 @@ module.exports.createProject = async (req, res) => {
         await Assignee.bulkCreate(assigneeData, { transaction });
       } catch (error) {
         await transaction.rollback();
-        return res.status(400).json({ message: 'Failed to create assignees', error: error.message });
+        return res.status(500).json({ message: 'Failed to create assignees', error: error.message });
       }
     }
 
@@ -86,7 +86,7 @@ module.exports.createProject = async (req, res) => {
         const { error: phaseError } = validatePhase(phase);
         if (phaseError) {
           await transaction.rollback();
-          return res.status(400).json({ message: 'Phase validation error', details: phaseError.details });
+          return res.status(500).json({ message: 'Phase validation error', details: phaseError.details });
         }
       }
 
@@ -106,13 +106,13 @@ module.exports.createProject = async (req, res) => {
           );
         } catch (error) {
           await transaction.rollback();
-          return res.status(400).json({ message: 'Failed to create phase', error: error.message });
+          return res.status(500).json({ message: 'Failed to create phase', error: error.message });
         }
 
         // Verify phase was created successfully
         if (!phaseRecord || !phaseRecord.uuid) {
           await transaction.rollback();
-          return res.status(400).json({ message: 'Phase creation failed - invalid phase data' });
+          return res.status(500).json({ message: 'Phase creation failed - invalid phase data' });
         }
 
         // Create Deliverables for each Phase if provided
@@ -122,7 +122,7 @@ module.exports.createProject = async (req, res) => {
             const { error: deliverableError } = validateDeliverable(deliverable);
             if (deliverableError) {
               await transaction.rollback();
-              return res.status(400).json({ message: 'Deliverable validation error', details: deliverableError.details });
+              return res.status(500).json({ message: 'Deliverable validation error', details: deliverableError.details });
             }
           }
 
@@ -135,7 +135,7 @@ module.exports.createProject = async (req, res) => {
             await Deliverable.bulkCreate(deliverableData, { transaction });
           } catch (error) {
             await transaction.rollback();
-            return res.status(400).json({ message: 'Failed to create deliverables', error: error.message });
+            return res.status(500).json({ message: 'Failed to create deliverables', error: error.message });
           }
         }
       }
@@ -143,7 +143,7 @@ module.exports.createProject = async (req, res) => {
 
     // Commit the transaction
     await transaction.commit();
-    res.status(201).json({ message: 'Project created successfully', project });
+    res.status(200).json({ message: 'Project created successfully', project });
   } catch (error) {
     // Rollback the transaction if any error occurs
     await transaction.rollback();
