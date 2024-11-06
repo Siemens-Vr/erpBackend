@@ -38,13 +38,13 @@ const deliverableSchema = Joi.object({
       'any.required': 'Expected Finish Date is required.',
     }),
 
-  description: Joi.string()
-    .optional()
-    .required()
-    .messages({
-      'string.base': 'Description must be a string.',
-      'any.required': 'Desciption is required.',
-    }),
+  // description: Joi.string()
+  //   .optional()
+  //   .required()
+  //   .messages({
+  //     'string.base': 'Description must be a string.',
+  //     'any.required': 'Desciption is required.',
+  //   }),
 
   // phaseId: Joi.string()
   //   .guid({ version: ['uuidv4'] })
