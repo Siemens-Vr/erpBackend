@@ -1,6 +1,6 @@
 const { Document, Project, sequelize } = require('../models');
 const documentValidation = require('../validation/documentValidation');
-const fs = require('fs');
+// const fs = require('fs');
 const path = require('path');
 const fs = require('fs').promises;
 
