@@ -2,6 +2,7 @@ const { Document, Project, sequelize } = require('../models');
 const documentValidation = require('../validation/documentValidation');
 const fs = require('fs');
 const path = require('path');
+const fs = require('fs').promises;
 
 
 // Create a new document with file upload
@@ -65,9 +66,7 @@ exports.createDocument = async (req, res) => {
     }
   };
   
-
-  const path = require('path');
-  const fs = require('fs').promises;
+ 
   
   exports.getAllDocuments = async (req, res) => {
     try {
