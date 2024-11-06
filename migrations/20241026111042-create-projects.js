@@ -36,10 +36,6 @@ module.exports = {
         type: Sequelize.DECIMAL,
         allowNull: true,
       },
-      documentPath: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
       startDate: {
         type: Sequelize.DATE,
         allowNull: false,

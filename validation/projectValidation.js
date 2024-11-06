@@ -64,11 +64,11 @@ const projectSchema = Joi.object({
         'any.required': 'End Date is required.',
       }),
   
-    documentPath: Joi.string()
-      .optional()
-      .messages({
-        'string.base': 'Document path must be a string.',
-      }),
+    // documentPath: Joi.string()
+    //   .optional()
+    //   .messages({
+    //     'string.base': 'Document path must be a string.',
+    //   }),
       
   });
   

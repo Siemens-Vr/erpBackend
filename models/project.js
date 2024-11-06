@@ -3,7 +3,7 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class Project extends Model {
-    static associate({ Assignee, Phase }) {
+    static associate({ Assignee, Phase, Document }) {
       this.hasMany(Assignee, {
         foreignKey: 'projectId',
         as: 'assignees',
@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
       this.hasMany(Phase, {
         foreignKey: 'projectId',
         as: 'phases',
+      });
+      this.hasMany(Document, {
+        foreignKey: 'projectId',
+        as: 'documents',
       });
     }
   }
@@ -42,11 +46,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DECIMAL,
       allowNull: true,
     },
-    documentPath: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    },
-   
     funding: {
       type: DataTypes.DECIMAL,
       allowNull: true,

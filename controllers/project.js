@@ -25,8 +25,8 @@ module.exports.createProject = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    // Get file path from multer (if file is uploaded)
-    const documentPath = req.file ? req.file.path : null;
+    // // Get file path from multer (if file is uploaded)
+    // const documentPath = req.file ? req.file.path : null;
 
     // Step 3: Create the project with document path if provided
     let project;
@@ -40,7 +40,6 @@ module.exports.createProject = async (req, res) => {
           funding,
           startDate,
           endDate,
-          documentPath,
         },
         { transaction }
       );
@@ -172,28 +171,14 @@ module.exports.getAllProjects = async (req, res) => {
       ],
     });
 
-    // Process each project to get just the document filename
-    const processedProjects = projects.map((project) => {
-      const documentName = project.documentPath
-        ? project.documentPath.startsWith('/') 
-          ? project.documentPath.slice(1).split('/').pop() 
-          : project.documentPath.split('/').pop()
-        : null;
-
-      return {
-        ...project.toJSON(),
-        documentName, 
-      };
-    });
-
-    res.status(200).json(processedProjects);
+    res.status(200).json(projects);
   } catch (error) {
     res.status(500).json({ message: 'Failed to retrieve projects', error: error.message });
   }
 };
 
 module.exports.getProjectById = async (req, res) => {
-  const { uuid} = req.params;
+  const { uuid } = req.params;
 
   try {
     const project = await Project.findOne({
@@ -220,20 +205,7 @@ module.exports.getProjectById = async (req, res) => {
       return res.status(404).json({ message: 'Project not found' });
     }
 
-    // Extract filename from documentPath
-    const documentName = project.documentPath
-      ? project.documentPath.startsWith('/') 
-        ? project.documentPath.slice(1).split('/').pop() 
-        : project.documentPath.split('/').pop()
-      : null;
-
-    // Add document name as a separate field
-    const processedProject = {
-      ...project.toJSON(),
-      documentName,
-    };
-
-    res.status(200).json(processedProject);
+    res.status(200).json(project);
   } catch (error) {
     res.status(500).json({ message: 'Failed to retrieve project', error: error.message });
   }
@@ -267,7 +239,6 @@ module.exports.updateProject = async (req, res) => {
         funding,
         startDate,
         endDate,
-        documentPath: req.file ? req.file.path : project.documentPath,
       },
       { transaction }
     );

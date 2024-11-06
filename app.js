@@ -22,10 +22,13 @@ const phasesRouter = require('./routes/phases');
 const assigneesRouter = require('./routes/assignees');
 const deliverablesRouter = require('./routes/deliverables');
 const feeRouter = require('./routes/fee');
+const documentsRouter = require('./routes/documentRoutes');
+
 
 
 // Import the authentication middleware
 const isAuthenticated = require('./middleware/isAuthenticated');  // Adjust the path if necessary
+const documents = require('./models/documents');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -58,6 +61,7 @@ app.use('/phases', phasesRouter);
 app.use('/assignees', assigneesRouter);
 app.use('/deliverables', deliverablesRouter);
 app.use('/fee', isAuthenticated, feeRouter);
+app.use('/documents',documentsRouter);
 
 // Test route to verify server is running
 app.get("/", (req, res) => {
