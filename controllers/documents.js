@@ -76,33 +76,37 @@ exports.createDocument = async (req, res) => {
       }
   
       const documents = await Document.findAll({ where: { projectId: project.uuid } });
+      const results = [];
+      const errors = [];
   
-      const processedDocuments = await Promise.all(documents.map(async (document) => {
+      // Process documents and collect results/errors
+      await Promise.all(documents.map(async (document) => {
         if (!document.documentPath) {
-          return res.status(400).json({ 
+          errors.push({
             error: 'Invalid document path',
-            documentId: document.uuid 
+            documentId: document.uuid
           });
+          return;
         }
   
         // Get the full filename including timestamp from documentPath
-        const fullFileName = document.documentPath.split('/').pop(); // Gets "1730894356421-911488836-CITY TYRES - DRAW PROFESSIONALS 2024.pdf"
+        const fullFileName = document.documentPath.split('/').pop();
         const fullPath = path.join('/opt/render/project/src/uploads', fullFileName);
         
         try {
           await fs.access(fullPath);
           const buffer = await fs.readFile(fullPath);
           
-          return {
+          results.push({
             ...document.toJSON(),
-            documentName: fullFileName,  // Include the full filename with timestamp
-            originalName: fullFileName.split('-').slice(2).join('-'), // Gets original filename without timestamps
+            documentName: fullFileName,
+            originalName: fullFileName.split('-').slice(2).join('-'),
             existsInUploads: true,
             fileData: buffer.toString('base64'),
             mimeType: document.mimeType || 'application/octet-stream'
-          };
+          });
         } catch (error) {
-          return res.status(404).json({ 
+          errors.push({
             error: 'Document file not found in uploads folder',
             documentPath: document.documentPath,
             documentId: document.uuid
@@ -110,10 +114,15 @@ exports.createDocument = async (req, res) => {
         }
       }));
   
-      res.status(200).json(processedDocuments);
+      // Return both successful results and errors
+      return res.status(200).json({
+        documents: results,
+        errors: errors.length > 0 ? errors : null
+      });
+  
     } catch (err) {
       console.error('Error in getAllDocuments:', err);
-      res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: err.message });
     }
   };
   
@@ -148,8 +157,8 @@ exports.createDocument = async (req, res) => {
         
         return res.status(200).json({
           ...document.toJSON(),
-          documentName: fullFileName, // Include the full filename with timestamp
-          originalName: fullFileName.split('-').slice(2).join('-'), // Gets original filename without timestamps
+          documentName: fullFileName,
+          originalName: fullFileName.split('-').slice(2).join('-'),
           existsInUploads: true,
           fileData: buffer.toString('base64'),
           mimeType: document.mimeType || 'application/octet-stream'
