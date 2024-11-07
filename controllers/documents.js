@@ -92,17 +92,17 @@ exports.createDocument = async (req, res) => {
         // Get the full filename including timestamp from documentPath
         const fullFileName = document.documentPath.split('/').pop();
         const fullPath = path.join('/opt/render/project/src/uploads', fullFileName);
-        
+  
         try {
           await fs.access(fullPath);
-          const buffer = await fs.readFile(fullPath);
-          
+          const fileData = await fs.readFile(fullPath, 'binary');
+  
           results.push({
             ...document.toJSON(),
             documentName: fullFileName,
             originalName: fullFileName.split('-').slice(2).join('-'),
             existsInUploads: true,
-            fileData: buffer.toString('base64'),
+            fileData,
             mimeType: document.mimeType || 'application/octet-stream'
           });
         } catch (error) {
@@ -149,18 +149,18 @@ exports.createDocument = async (req, res) => {
   
       // Get the full filename including timestamp from documentPath
       const fullFileName = document.documentPath.split('/').pop();
-      const fullPath = path.join('/home/victor/Documents/Siemens/erpBackend/uploads', fullFileName);
+      const fullPath = path.join('/opt/render/project/src/uploads', fullFileName);
   
       try {
         await fs.access(fullPath);
-        const buffer = await fs.readFile(fullPath);
-        
+        const fileData = await fs.readFile(fullPath, 'binary');
+  
         return res.status(200).json({
           ...document.toJSON(),
           documentName: fullFileName,
           originalName: fullFileName.split('-').slice(2).join('-'),
           existsInUploads: true,
-          fileData: buffer.toString('base64'),
+          fileData,
           mimeType: document.mimeType || 'application/octet-stream'
         });
       } catch (error) {
