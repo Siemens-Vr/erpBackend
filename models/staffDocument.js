@@ -2,16 +2,16 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class Document extends Model {
-    static associate({ Project }) {
-      this.belongsTo(Project, {
-        foreignKey: 'projectId',
-        as: 'project',
+  class StaffDocument extends Model {
+    static associate({ Staff }) {
+      this.belongsTo(Staff, {
+        foreignKey: 'staffId',
+        as: 'staffDocument',
       });
     }
   }
 
-  Document.init({
+  StaffDocument.init({
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -22,11 +22,11 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.UUID,
     },
-    // projectId: {
+    // staffId: {
     //   type: DataTypes.INTEGER,
     //   allowNull: false,
     //   references: {
-    //     model: 'Projects',
+    //     model: 'Staff',
     //     key: 'uuid',
     //   },
     // },
@@ -48,9 +48,9 @@ module.exports = (sequelize, DataTypes) => {
     },
   }, {
     sequelize,
-    modelName: 'Document',
-    schema: 'projects',
+    modelName: 'StaffDocument',
+    schema: 'students',
   });
 
-  return Document;
+  return StaffDocument;
 };

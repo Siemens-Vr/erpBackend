@@ -24,6 +24,7 @@ const assigneesRouter = require('./routes/assignees');
 const deliverablesRouter = require('./routes/deliverables');
 const feeRouter = require('./routes/fee');
 const documentsRouter = require('./routes/documentRoutes');
+const staffDocumentsRouter = require('./routes/staffDocuments');
 
 
 
@@ -44,6 +45,7 @@ app.use(express.json());
 // Public Route: No authentication required for this route
 app.use('/users', userRouter);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/staffUploads', express.static(path.join(__dirname, 'staffUploads')));
 
 // Protected Routes: Apply `isAuthenticated` middleware to all other routes
 app.use('/facilitators', isAuthenticated, facilitatorsRouter);
@@ -64,6 +66,7 @@ app.use('/assignees', assigneesRouter);
 app.use('/deliverables', deliverablesRouter);
 app.use('/fee', isAuthenticated, feeRouter);
 app.use('/documents',documentsRouter);
+app.use('/staffDocuments',staffDocumentsRouter);
 
 // Test route to verify server is running
 app.get("/", (req, res) => {
