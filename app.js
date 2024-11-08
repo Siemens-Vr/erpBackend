@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
@@ -34,7 +35,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-    origin: 'http://localhost:3000',  // Replace with your frontend's URL
+    origin: ' http://localhost:3000',  // Replace with your frontend's URL
     methods: 'GET,POST,PUT,DELETE',
     allowedHeaders: 'Content-Type,Authorization',
   }));
@@ -42,6 +43,7 @@ app.use(express.json());
 
 // Public Route: No authentication required for this route
 app.use('/users', userRouter);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Protected Routes: Apply `isAuthenticated` middleware to all other routes
 app.use('/facilitators', isAuthenticated, facilitatorsRouter);
