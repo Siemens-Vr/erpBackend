@@ -3,10 +3,18 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class Document extends Model {
-    static associate({ Project }) {
+    static associate({ Project, Folder, SubFolder }) {
       this.belongsTo(Project, {
         foreignKey: 'projectId',
         as: 'project',
+      });
+      this.belongsTo(Folder, {
+        foreignKey: 'folderId',
+        as: 'folder',
+      });
+      this.belongsTo(SubFolder, {
+        foreignKey: 'subFolderId',
+        as: 'subFolder',
       });
     }
   }
@@ -22,14 +30,30 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.UUID,
     },
-    // projectId: {
-    //   type: DataTypes.INTEGER,
-    //   allowNull: false,
-    //   references: {
-    //     model: 'Projects',
-    //     key: 'uuid',
-    //   },
-    // },
+    projectId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'Projects',
+        key: 'uuid',
+      },
+    },
+    folderId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'Folders',
+        key: 'uuid',
+      },
+    },
+    subFolderId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'SubFolders',
+        key: 'uuid',
+      },
+    },
     documentPath: {
       type: DataTypes.STRING,
       allowNull: false,

@@ -23,6 +23,24 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
+      folderId: {
+        type: Sequelize.UUID,
+        references: {
+          model: 'Folder',
+          key: 'uuid'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
+      subFolderId: {
+        type: Sequelize.UUID,
+        references: {
+          model: 'SubFolder',
+          key: 'uuid'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
       documentPath: {
         type: Sequelize.STRING,
         allowNull: false,
