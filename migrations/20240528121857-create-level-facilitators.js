@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('LevelFacilitators', {
+    await queryInterface.createTable({schema: 'students', tableName: 'LevelFacilitators'}, {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -44,6 +44,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('LevelFacilitators');
+    await queryInterface.dropTable({schema: 'students', tableName: 'LevelFacilitators'});
   }
 };

@@ -3,7 +3,7 @@ const {Sequelize, DataTypes} = require('sequelize')
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.sequelize.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
-    await queryInterface.createTable('RefreshTokens', {
+    await queryInterface.createTable({ schema: 'users', tableName: 'RefreshTokens' }, {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -48,6 +48,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('RefreshTokens');
+    await queryInterface.dropTable({ schema: 'users', tableName: 'RefreshTokens' });
   }
 };

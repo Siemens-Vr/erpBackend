@@ -1,10 +1,13 @@
-const {Router} = require('express')
-const router = Router()
-
-const projectsController = require('../controllers/projects')
-
-router.get('/', projectsController.getProjects)
-router.post('/', projectsController.createProject)
+const { Router } = require('express');
+const router = Router();
+const { createProject, getProjectById, getAllProjects,updateProject,deleteProject } = require('../controllers/project'); 
+const upload = require('../middleware/uploadMiddleware'); 
 
 
-module.exports = router
+router.post('/', upload.single('document'), createProject);
+router.get('/:uuid', getProjectById);
+router.get('/', getAllProjects);
+router.put('/:uuid', upload.single('document'), updateProject);
+router.delete('/:uuid', deleteProject );
+
+module.exports = router;

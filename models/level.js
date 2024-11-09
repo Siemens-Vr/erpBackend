@@ -72,6 +72,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Level',
+    schema: 'students',
   });
 
   return Level;

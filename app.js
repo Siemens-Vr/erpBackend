@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
@@ -18,16 +19,25 @@ const categoriesRouter = require('./routes/categories');
 const itemsRoutes = require('./routes/itemsRoutes');
 const supplierRouter = require('./routes/suppliers');
 const projectsRouter = require('./routes/projects');
+const phasesRouter = require('./routes/phases');
+const assigneesRouter = require('./routes/assignees');
+const deliverablesRouter = require('./routes/deliverables');
 const feeRouter = require('./routes/fee');
+const folderRouter = require('./routes/folder')
+const documentsRouter = require('./routes/documentRoutes');
+const staffDocumentsRouter = require('./routes/staffDocuments');
+
+
 
 // Import the authentication middleware
 const isAuthenticated = require('./middleware/isAuthenticated');  // Adjust the path if necessary
+const documents = require('./models/documents');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-    origin: 'http://localhost:3000',  // Replace with your frontend's URL
+    origin: ' http://localhost:3000',  // Replace with your frontend's URL
     methods: 'GET,POST,PUT,DELETE',
     allowedHeaders: 'Content-Type,Authorization',
   }));
@@ -35,6 +45,8 @@ app.use(express.json());
 
 // Public Route: No authentication required for this route
 app.use('/users', userRouter);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/staffUploads', express.static(path.join(__dirname, 'staffUploads')));
 
 // Protected Routes: Apply `isAuthenticated` middleware to all other routes
 app.use('/facilitators', isAuthenticated, facilitatorsRouter);
@@ -49,8 +61,16 @@ app.use('/categories', isAuthenticated, categoriesRouter);
 app.use('/job', isAuthenticated, notificationRoutes);
 app.use('/items', isAuthenticated, itemsRoutes);
 app.use('/suppliers', isAuthenticated, supplierRouter);
-app.use('/projects', isAuthenticated, projectsRouter);
+app.use('/projects', projectsRouter);
+app.use('/phases', phasesRouter);
+app.use('/assignees', assigneesRouter);
+app.use('/deliverables', deliverablesRouter);
 app.use('/fee', isAuthenticated, feeRouter);
+app.use('/documents',documentsRouter);
+app.use('/staffDocuments',staffDocumentsRouter);
+app.use('/folders',folderRouter);
+
+
 
 // Test route to verify server is running
 app.get("/", (req, res) => {

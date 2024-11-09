@@ -100,6 +100,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'BorrowedComponent',
+    schema: 'equipments',
   });
   return BorrowedComponent;
 };

@@ -6,7 +6,7 @@ module.exports = {
 
   async up(queryInterface, Sequelize) {
     await queryInterface.sequelize.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
-    await queryInterface.createTable('Students', {
+    await queryInterface.createTable({ schema: 'students', tableName: 'Students' }, {
       id:{
         allowNull: false,
         autoIncrement: true,
@@ -72,6 +72,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Students');
+    await queryInterface.dropTable({ schema: 'students', tableName: 'Students' });
   }
 };

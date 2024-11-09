@@ -50,6 +50,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'ConditionDetails',
+    schema: 'equipments',
   });
   return ConditionDetails;
 };
