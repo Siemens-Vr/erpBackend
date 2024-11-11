@@ -5,21 +5,28 @@ module.exports.createSubFolder = async (req, res) => {
     const folderId = req.params.folderId;
     const { name, description } = req.body;
 
+    // Check if parent folder exists
     const parentFolder = await Folder.findByPk(folderId);
     if (!parentFolder) {
       return res.status(404).json({ error: 'Parent folder not found' });
     }
 
+    // Check if the subfolder with the same name already exists within the folder
+    const existingSubFolder = await SubFolder.findOne({
+      where: { folderId }
+    });
+
+    if (existingSubFolder) {
+      return res.status(400).json({ error: 'Subfolder with this name already exists' });
+    }
+
+    // Create new subfolder
     const subFolder = await SubFolder.create({
       folderId,
-      projectId: parentFolder.projectId,
+      projectId: parentFolder.projectId, 
       folderName: name,
       description
     });
-
-    if (!subFolder) {
-      return res.status(400).json({ error: 'Error creating the subfolder' });
-    }
 
     res.status(201).json(subFolder);
   } catch (error) {
@@ -27,6 +34,7 @@ module.exports.createSubFolder = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 module.exports.getSubFolders = async (req, res) => {
   try {
@@ -92,7 +100,7 @@ module.exports.deleteSubFolder = async (req, res) => {
       return res.status(404).json({ error: "Subfolder not found" });
     }
 
-    await subFolder.destroy();const { SubFolder, Folder } = require('../models');
+    await subFolder.destroy();
 
     module.exports.createSubFolder = async (req, res) => {
       try {

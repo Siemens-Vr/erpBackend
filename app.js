@@ -25,6 +25,8 @@ const deliverablesRouter = require('./routes/deliverables');
 const feeRouter = require('./routes/fee');
 const documentsRouter = require('./routes/documentRoutes');
 const staffDocumentsRouter = require('./routes/staffDocuments');
+const folderRouter = require('./routes/folder');
+const subFolderRouter = require('./routes/subFolder');
 
 
 
@@ -67,6 +69,9 @@ app.use('/deliverables', deliverablesRouter);
 app.use('/fee', isAuthenticated, feeRouter);
 app.use('/documents',documentsRouter);
 app.use('/staffDocuments',staffDocumentsRouter);
+app.use('/folders',folderRouter);
+app.use('/subFolders',subFolderRouter);
+
 
 // Test route to verify server is running
 app.get("/", (req, res) => {

@@ -3,11 +3,11 @@ const { Folder, SubFolder } = require('../models');
 module.exports.createFolder = async (req, res) => {
   try {
     const projectId = req.params.id;
-    const { name, description } = req.body;
+    const { folderName, description } = req.body;
 
     const folder = await Folder.create({
       projectId,
-      folderName: name,
+      folderName,
       description
     });
 
@@ -59,7 +59,7 @@ module.exports.getFolderData = async (req, res) => {
 module.exports.updateFolder = async (req, res) => {
   try {
     const folderId = req.params.folderId;
-    const { name, description } = req.body;
+    const { folderName, description } = req.body;
 
     const folder = await Folder.findByPk(folderId);
 
@@ -68,7 +68,7 @@ module.exports.updateFolder = async (req, res) => {
     }
 
     await folder.update({
-      folderName: name,
+      folderName,
       description
     });
 
