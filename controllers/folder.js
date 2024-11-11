@@ -1,4 +1,5 @@
-const { Folder, SubFolder } = require('../models');
+const { Folder, SubFolder,Document } = require('../models');
+const { Op } = require('sequelize');  
 
 module.exports.createFolder = async (req, res) => {
   try {
@@ -22,21 +23,37 @@ module.exports.createFolder = async (req, res) => {
   }
 };
 
+
 module.exports.getFolders = async (req, res) => {
   try {
     const projectId = req.params.id;
+
+    // Fetch folders for the project
     const folders = await Folder.findAll({ where: { projectId } });
 
-    if (!folders) {
-      return res.status(404).json({ error: "Error fetching folders" });
+    // Fetch documents where both folderId and subFolderId are null
+    const files = await Document.findAll({
+      where: {
+        projectId,
+        folderId: { [Op.is]: null },  
+        subFolderId: { [Op.is]: null } 
+      }
+    });
+
+    if (!folders || folders.length === 0) {
+      return res.status(404).json({ error: "No folders found" });
     }
 
-    res.status(200).json(folders);
+    // Combine the folders and files into one response object and send it
+    res.status(200).json({ folders, files });
   } catch (error) {
     console.log('Error in the folder controller', error.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
+
 
 module.exports.getFolderData = async (req, res) => {
   try {

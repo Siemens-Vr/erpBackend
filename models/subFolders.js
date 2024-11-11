@@ -87,7 +87,7 @@ module.exports = (sequelize) => {
       sequelize,
       modelName: 'SubFolder',
       schema: 'projects',
-      tableName: 'subFolders',
+      tableName: 'SubFolders',
       timestamps: true,
     }
   );

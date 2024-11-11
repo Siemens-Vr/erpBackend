@@ -2,6 +2,7 @@ const { Document, Project, Folder, SubFolder, sequelize } = require('../models')
 const documentValidation = require('../validation/documentValidation');
 const path = require('path');
 const fs = require('fs').promises;
+const { Op } = require('sequelize'); 
 
 // Create a new document with file upload
 exports.createDocument = async (req, res) => {
@@ -103,35 +104,103 @@ exports.updateDocument = async (req, res) => {
   }
 };
 
-// Fetch all documents for a project, folder, or subfolder
+
 exports.getAllDocuments = async (req, res) => {
   try {
     const { projectUuid, folderUuid, subFolderUuid } = req.params;
 
+    // Fetch the project by UUID
     const project = await Project.findOne({ where: { uuid: projectUuid } });
     if (!project) return res.status(404).json({ error: 'Project not found' });
 
     let whereClause = { projectId: projectUuid };
 
+    // Check if a folder UUID is provided
     if (folderUuid) {
       const folder = await Folder.findOne({ where: { uuid: folderUuid, projectId: projectUuid } });
       if (!folder) return res.status(404).json({ error: 'Folder not found' });
-      whereClause.folderId = folderUuid;
 
+      // Add the folderId to the whereClause
+      whereClause.folderId = folder.uuid;
+
+      // Fetch subfolders inside the folder
+      const subFolders = await SubFolder.findAll({ where: { folderId: folder.uuid } });
+
+      // If subFolderUuid is provided, fetch subfolder and add to whereClause
       if (subFolderUuid) {
-        const subFolder = await SubFolder.findOne({ where: { uuid: subFolderUuid, folderId: folderUuid } });
+        const subFolder = await SubFolder.findOne({ where: { uuid: subFolderUuid, folderId: folder.uuid } });
         if (!subFolder) return res.status(404).json({ error: 'SubFolder not found' });
-        whereClause.subFolderId = subFolderUuid;
-      }
-    }
 
-    const documents = await Document.findAll({ where: whereClause });
-    res.status(200).json({ status: "ok", data: documents });
+        // Add subFolderId to whereClause to find documents with that specific subFolderId
+        whereClause.subFolderId = subFolderUuid;
+      } else {
+        // If no subFolderUuid is provided, show documents where subFolderId is null
+        whereClause.subFolderId = { [Op.is]: null };  
+      }
+
+      // Fetch the documents with the constructed whereClause
+      const documents = await Document.findAll({
+        where: whereClause
+      });
+
+      // Return both documents and subfolders
+      return res.status(200).json({
+        status: "ok",
+        data: documents,
+        subFolders: subFolders  
+      });
+    } else {
+      return res.status(400).json({ error: 'Folder UUID is required' });
+    }
   } catch (error) {
-    console.error('Error fetching documents:', error);
-    res.status(500).json({ error: 'Failed to fetch documents' });
+    console.error('Error fetching documents and subfolders:', error);
+    res.status(500).json({ error: 'Failed to fetch documents and subfolders' });
   }
 };
+exports.getDocumentsInSubfolder = async (req, res) => {
+  try {
+    const { projectUuid, folderUuid, subFolderUuid } = req.params;
+
+    // Fetch the project by UUID
+    const project = await Project.findOne({ where: { uuid: projectUuid } });
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+
+    // Check if folderUuid is provided
+    if (folderUuid) {
+      const folder = await Folder.findOne({ where: { uuid: folderUuid, projectId: project.uuid } });
+      if (!folder) return res.status(404).json({ error: 'Folder not found' });
+
+      // Check if subFolderUuid is provided
+      if (subFolderUuid) {
+        const subFolder = await SubFolder.findOne({ where: { uuid: subFolderUuid, folderId: folder.uuid } });
+        if (!subFolder) return res.status(404).json({ error: 'SubFolder not found' });
+
+        // Fetch documents that belong to this specific subFolder
+        const documents = await Document.findAll({
+          where: {
+            projectId: project.uuid,
+            folderId: folder.uuid,
+            subFolderId: subFolder.uuid
+          }
+        });
+
+        // Return the documents in the response
+        return res.status(200).json({
+          status: "ok",
+          data: documents
+        });
+      } else {
+        return res.status(400).json({ error: 'Subfolder UUID is required' });
+      }
+    } else {
+      return res.status(400).json({ error: 'Folder UUID is required' });
+    }
+  } catch (error) {
+    console.error('Error fetching documents in subfolder:', error);
+    return res.status(500).json({ error: 'Failed to fetch documents' });
+  }
+};
+
 
 // Get a specific document by its UUID and project UUID
 exports.getDocumentById = async (req, res) => {

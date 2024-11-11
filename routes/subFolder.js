@@ -5,7 +5,7 @@ const { createSubFolder,getSubFolders,getSubFolderData,updateSubFolder,deleteSub
 
 router.post('/:folderId', createSubFolder);
 router.get('/:folderId', getSubFolders);
-router.get('/:subFolderId', getSubFolderData);
+router.get('/:folderUuid/:subFolderUuid ', getSubFolderData);
 router.put('/:subFolderId', updateSubFolder);
 router.delete('/:subFolderId', deleteSubFolder);
 
