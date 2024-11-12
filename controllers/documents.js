@@ -157,6 +157,41 @@ exports.getAllDocuments = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch documents and subfolders' });
   }
 };
+exports.getAllDocumentsAndFolders = async (req, res) => {
+  try {
+    const { projectUuid } = req.params;
+
+    // Fetch the project by UUID
+    const project = await Project.findOne({ where: { uuid: projectUuid } });
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+
+    // Fetch all folders associated with the project
+    const folders = await Folder.findAll({ where: { projectId: projectUuid } });
+
+    // Create a where clause to find documents with both folderId and subFolderId null
+    const documentWhereClause = {
+      projectId: projectUuid,
+      folderId: null,
+      subFolderId: null
+    };
+
+    // Fetch documents with projectId and both folderId and subFolderId set to null
+    const documents = await Document.findAll({ where: documentWhereClause });
+
+    // Return both documents and folders
+    return res.status(200).json({
+      status: "ok",
+      data: {
+        folders,
+        documents
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching documents and folders:', error);
+    res.status(500).json({ error: 'Failed to fetch documents and folders' });
+  }
+};
+
 exports.getDocumentsInSubfolder = async (req, res) => {
   try {
     const { projectUuid, folderUuid, subFolderUuid } = req.params;
