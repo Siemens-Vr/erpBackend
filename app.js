@@ -27,6 +27,8 @@ const documentsRouter = require('./routes/documentRoutes');
 const staffDocumentsRouter = require('./routes/staffDocuments');
 const folderRouter = require('./routes/folder');
 const subFolderRouter = require('./routes/subFolder');
+const weekRouter = require('./routes/weeks');
+const materialRouter = require('./routes/materials');
 
 
 
@@ -71,6 +73,8 @@ app.use('/documents',documentsRouter);
 app.use('/staffDocuments',staffDocumentsRouter);
 app.use('/folders',folderRouter);
 app.use('/subFolders',subFolderRouter);
+app.use('/weeks',weekRouter);
+app.use('/materials',materialRouter);
 
 
 // Test route to verify server is running

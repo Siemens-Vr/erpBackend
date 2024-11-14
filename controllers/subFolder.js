@@ -3,7 +3,7 @@ const { SubFolder, Folder } = require('../models');
     module.exports.createSubFolder = async (req, res) => {
       try {
         const folderId = req.params.folderId;
-        const { name, description } = req.body;
+        const { folderName, description } = req.body;
     
         const parentFolder = await Folder.findByPk(folderId);
         if (!parentFolder) {
@@ -13,7 +13,7 @@ const { SubFolder, Folder } = require('../models');
         const subFolder = await SubFolder.create({
           folderId,
           projectId: parentFolder.projectId,
-          folderName:
+          folderName,
           description
         });
     

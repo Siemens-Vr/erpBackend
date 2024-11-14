@@ -7,6 +7,7 @@ module.exports = {
     await queryInterface.sequelize.query('CREATE SCHEMA IF NOT EXISTS equipments');
     await queryInterface.sequelize.query('CREATE SCHEMA IF NOT EXISTS applicants');
     await queryInterface.sequelize.query('CREATE SCHEMA IF NOT EXISTS users');
+    await queryInterface.sequelize.query('CREATE SCHEMA IF NOT EXISTS materials');
   },
 
   down: async (queryInterface, Sequelize) => {
@@ -15,5 +16,6 @@ module.exports = {
     await queryInterface.sequelize.query('DROP SCHEMA IF EXISTS equipments');
     await queryInterface.sequelize.query('DROP SCHEMA IF EXISTS applicants');
     await queryInterface.sequelize.query('DROP SCHEMA IF EXISTS users');
+    await queryInterface.sequelize.query('DROP SCHEMA IF EXISTS materials');
   }
 };

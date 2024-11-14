@@ -14,6 +14,7 @@ const db = {};
 // console.log('Database URL:', process.env[config.use_env_variable]);
 
 let sequelize;
+
 if (config.use_env_variable) {
   const databaseUrl = process.env[config.use_env_variable];
   if (!databaseUrl) {
@@ -34,9 +35,17 @@ if (config.use_env_variable) {
     host: config.host,
     dialect: 'postgres',
     protocol: 'postgres',
- 
   });
 }
+
+// Check if the connection is successful
+sequelize.authenticate()
+  .then(() => {
+    console.log('Database connected successfully!');
+  })
+  .catch(err => {
+    console.error('Unable to connect to the database:', err);
+  });
 
 fs
   .readdirSync(__dirname)
