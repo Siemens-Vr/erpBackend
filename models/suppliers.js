@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         autoIncrement: true,
         type: DataTypes.INTEGER,
-        unique: true, 
+        unique: true,
       },
       uuid: {
         defaultValue: DataTypes.UUIDV4,
@@ -31,11 +31,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       amountClaimed: {
-        type: DataTypes.FLOAT, 
+        type: DataTypes.FLOAT,
         allowNull: false,
         //unique: true, 
         validate: {
-          isFloat: true, 
+          isFloat: true,
         },
       },
       approver: {
@@ -43,11 +43,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       dateTakenToApprover: {
-        type: DataTypes.DATE, 
+        type: DataTypes.DATE,
         allowNull: false,
       },
-      dateTakenToFinance: { 
-        type: DataTypes.DATE, 
+      dateTakenToFinance: {
+        type: DataTypes.DATE,
         allowNull: false,
       },
       type: {
@@ -67,17 +67,54 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
       },
       dateAccounted: {
-        type: DataTypes.DATE, 
+        type: DataTypes.DATE,
         allowNull: true,
       },
-      project:{
-        type:DataTypes.STRING,
-        allowNull:true
+      project: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      // New fields
+      invoiceDate: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      invoicePath: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      invoiceName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      paymentDate: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      paymentVoucherPath: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      paymentVoucherName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      approvalDate: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      approvalPath: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      approvalName: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW, 
+        defaultValue: DataTypes.NOW,
       },
       updatedAt: {
         allowNull: false,

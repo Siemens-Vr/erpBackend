@@ -2,7 +2,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable({schema: 'projects', tableName:  'Suppliers' }, {
+    await queryInterface.createTable({ schema: 'projects', tableName: 'Suppliers' }, {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -58,6 +58,43 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: true,
       },
+      // New fields
+      invoiceDate: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      invoicePath: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      invoiceName: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      paymentDate: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      paymentVoucherPath: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      paymentVoucherName: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      approvalDate: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      approvalPath: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      approvalName: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -72,6 +109,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable({schema: 'projects', tableName:  'Suppliers' });
+    await queryInterface.dropTable({ schema: 'projects', tableName: 'Suppliers' });
   }
 };

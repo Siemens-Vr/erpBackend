@@ -1,7 +1,10 @@
 const { Supplier } = require('../models');
 const validateSupplier = require('../validation/supplierValidation');
 const { Op , Sequelize } = require('sequelize');
+const { upload } = require('../middleware/fileUploadMiddleware');
 const Joi = require('joi');
+const fs = require('fs');
+const path = require('path');
 
 
 const uuidSchema = Joi.string()
@@ -86,19 +89,55 @@ module.exports.getSuppliers = async (req, res) => {
 };
 
 module.exports.createSupplier = async (req, res) => {
-  const { error } = validateSupplier(req.body);
-  if (error) {
-    return res.status(400).json({ error: error.details.map(err => err.message) });
-  }
+  console.log(req.files);
+  const { suppliers, itemDescription, amountClaimed, approver, dateTakenToApprover, dateTakenToFinance, type, PvNo, claimNumber, accounted, dateAccounted, project, invoiceDate, paymentDate, approvalDate } = req.body;
+  const files = req.files || {};  
+  
 
-  const supplierData = req.body;
   try {
-    const createdSupplier = await Supplier.create(supplierData);
-    res.status(201).json(createdSupplier);
+    // Validate incoming data (you can use Joi or other validators)
+    const { error } = validateSupplier(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details.map(err => err.message) });
+    }
+
+    // Create Supplier with file paths directly in the table
+    const supplier = await Supplier.create({
+      suppliers,
+      itemDescription,
+      amountClaimed,
+      approver,
+      dateTakenToApprover,
+      dateTakenToFinance,
+      type,
+      PvNo,
+      claimNumber,
+      accounted,
+      dateAccounted,
+      project,
+      invoiceDate,
+      paymentDate,
+      approvalDate,
+
+      // Add file paths and names if present
+      invoicePath: files.invoice ? `/uploads/invoices/${files.invoice[0].filename}` : null,
+      invoiceName: files.invoice ? files.invoice[0].originalname : null,
+      
+      paymentVoucherPath: files.voucher ? `/uploads/vouchers/${files.voucher[0].filename}` : null,
+      paymentVoucherName: files.voucher ? files.voucher[0].originalname : null,
+      
+      approvalPath: files.approval ? `/uploads/approvals/${files.approval[0].filename}` : null,
+      approvalName: files.approval ? files.approval[0].originalname : null,
+    });
+
+    // Respond with the created supplier
+    return res.status(201).json({ supplier });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error creating supplier:', error);
+    return res.status(500).json({ error: 'Error creating supplier', details: error.message });
   }
 };
+
 
 module.exports.getSupplierById = async (req, res) => {
   const { id } = req.params;
@@ -116,11 +155,7 @@ module.exports.getSupplierById = async (req, res) => {
 
 module.exports.updateSupplier = async (req, res) => {
   const { id } = req.params;
-  const { error } = validateSupplier(req.body);
-  if (error) {
-    return res.status(400).json({ error: error.details.map(err => err.message) });
-  }
-
+  const files = req.files || {};
   const {
     suppliers,
     itemDescription,
@@ -133,14 +168,53 @@ module.exports.updateSupplier = async (req, res) => {
     claimNumber,
     accounted,
     dateAccounted,
+    invoiceDate,
+    paymentDate,
+    approvalDate,
   } = req.body;
 
   try {
-    const supplier = await Supplier.findOne({  where: { uuid: id }, });
+    const supplier = await Supplier.findOne({ where: { uuid: id } });
+
     if (!supplier) {
       return res.status(404).json({ message: 'Supplier not found' });
     }
 
+    // Helper function to delete old files
+    const deleteOldFile = (folder, oldFilePath) => {
+      if (!oldFilePath) return;
+      const oldFileName = path.basename(oldFilePath);
+      const oldFileFullPath = path.join(__dirname, `../uploads/${folder}/${oldFileName}`);
+
+      if (fs.existsSync(oldFileFullPath)) {
+        fs.unlinkSync(oldFileFullPath);
+        console.log(`Deleted old file: ${oldFileFullPath}`);
+      }
+    };
+
+    // Handle file updates
+    if (files.invoice && files.invoice.length > 0) {
+      // Delete old invoice
+      deleteOldFile('invoices', supplier.invoicePath);
+      supplier.invoicePath = `/uploads/invoices/${files.invoice[0].filename}`;
+      supplier.invoiceName = files.invoice[0].originalname;
+    }
+
+    if (files.voucher && files.voucher.length > 0) {
+      // Delete old voucher
+      deleteOldFile('vouchers', supplier.paymentVoucherPath);
+      supplier.paymentVoucherPath = `/uploads/vouchers/${files.voucher[0].filename}`;
+      supplier.paymentVoucherName = files.voucher[0].originalname;
+    }
+
+    if (files.approval && files.approval.length > 0) {
+      // Delete old approval
+      deleteOldFile('approvals', supplier.approvalPath);
+      supplier.approvalPath = `/uploads/approvals/${files.approval[0].filename}`;
+      supplier.approvalName = files.approval[0].originalname;
+    }
+
+    // Update supplier details
     await supplier.update({
       suppliers: suppliers || supplier.suppliers,
       itemDescription: itemDescription || supplier.itemDescription,
@@ -153,14 +227,23 @@ module.exports.updateSupplier = async (req, res) => {
       claimNumber: claimNumber || supplier.claimNumber,
       accounted: accounted !== undefined ? accounted : supplier.accounted,
       dateAccounted: dateAccounted || supplier.dateAccounted,
+      invoiceDate: invoiceDate || supplier.invoiceDate,
+      paymentDate: paymentDate || supplier.paymentDate,
+      approvalDate: approvalDate || supplier.approvalDate,
+      invoicePath: supplier.invoicePath,
+      invoiceName: supplier.invoiceName,
+      paymentVoucherPath: supplier.paymentVoucherPath,
+      paymentVoucherName: supplier.paymentVoucherName,
+      approvalPath: supplier.approvalPath,
+      approvalName: supplier.approvalName,
     });
 
     res.status(200).json({ message: "Supplier information successfully updated" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error updating supplier:', error);
+    res.status(500).json({ error: 'Error updating supplier', details: error.message });
   }
 };
-
 module.exports.search = async (req, res) => {
   try {
     const { PvNo, claimNumber, amountClaimed, suppliers } = req.query;
@@ -180,17 +263,49 @@ module.exports.search = async (req, res) => {
 };
 
 module.exports.deleteSupplier = async (req, res) => {
-    const { id } = req.params;
-  
-    try {
-      const supplier = await Supplier.findOne({  where: { uuid: id }, });
-      if (supplier) {
-        await supplier.destroy();
-        res.status(200).json({ message: "Supplier record successfully deleted" });
-      } else {
-        res.status(404).json({ message: 'Supplier not found' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: error.message });
+  const { id } = req.params;
+
+  try {
+    const supplier = await Supplier.findOne({ where: { uuid: id } });
+
+    if (!supplier) {
+      return res.status(404).json({ message: 'Supplier not found' });
     }
-  };
+
+    // Helper function to delete files
+    const deleteOldFile = (folder, oldFilePath) => {
+      if (!oldFilePath) return;
+      const oldFileName = path.basename(oldFilePath);
+      const oldFileFullPath = path.join(__dirname, `../uploads/${folder}/${oldFileName}`);
+
+      // Check if file exists before deleting
+      if (fs.existsSync(oldFileFullPath)) {
+        fs.unlinkSync(oldFileFullPath);
+        console.log(`Deleted file: ${oldFileFullPath}`);
+      } else {
+        console.log(`File not found: ${oldFileFullPath}`);
+      }
+    };
+
+    // Delete associated files
+    if (supplier.invoicePath) {
+      deleteOldFile('invoices', supplier.invoicePath);
+    }
+
+    if (supplier.paymentVoucherPath) {
+      deleteOldFile('vouchers', supplier.paymentVoucherPath);
+    }
+
+    if (supplier.approvalPath) {
+      deleteOldFile('approvals', supplier.approvalPath);
+    }
+
+    // Delete the supplier record
+    await supplier.destroy();
+
+    return res.status(200).json({ message: "Supplier record and associated files successfully deleted" });
+  } catch (error) {
+    console.error('Error deleting supplier:', error);
+    return res.status(500).json({ error: 'Error deleting supplier', details: error.message });
+  }
+};

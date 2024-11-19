@@ -1,4 +1,5 @@
 const { Router } = require('express');
+const { upload } = require('../middleware/fileUploadMiddleware');
 const { Supplier } = require('../models');
 const { 
   getSuppliers, 
@@ -12,10 +13,10 @@ const {
 const supplierRouter = Router();
 
 supplierRouter.get('/', getSuppliers);
-supplierRouter.post('/', createSupplier);
+supplierRouter.post('/', upload, createSupplier);
 supplierRouter.get('/:id', getSupplierById);
 supplierRouter.post('/search', search);
-supplierRouter.patch('/:id/update', updateSupplier);
+supplierRouter.patch('/:id/update',upload, updateSupplier);
 supplierRouter.get('/:id/delete', deleteSupplier);
 
 module.exports = supplierRouter;

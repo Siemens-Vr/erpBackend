@@ -14,14 +14,20 @@ const storage = (directory) => multer.diskStorage({
 const upload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
-      let uploadDir = 'files'; // default directory
+      let uploadDir = 'files'; 
       
       if (file.fieldname === 'videos') {
         uploadDir = 'videos';
       } else if (file.fieldname === 'images') {
         uploadDir = 'images';
-      }
-      
+      } else if (file.fieldname === 'invoice') {
+        uploadDir = 'invoices';
+      } else if (file.fieldname === 'approval') {
+        uploadDir = 'approvals';
+      } 
+      else if (file.fieldname === 'voucher') {
+        uploadDir = 'vouchers';
+      } 
       cb(null, path.join(__dirname, '..', 'uploads', uploadDir));
     },
     filename: (req, file, cb) => {
@@ -31,7 +37,10 @@ const upload = multer({
 }).fields([
   { name: 'videos', maxCount: 10 },
   { name: 'images', maxCount: 10 },
-  { name: 'files', maxCount: 10 }
+  { name: 'files', maxCount: 10 },
+  { name: 'voucher', maxCount: 10 },
+  { name: 'invoice', maxCount: 10 },
+  { name: 'approval', maxCount: 10 }, 
 ]);
 
 module.exports = { upload };
