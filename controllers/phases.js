@@ -116,7 +116,7 @@ module.exports.getAllPhases = async (req, res) => {
   };
 
   module.exports.updatePhase = async (req, res) => {
-    const { uuid } = req.params; 
+    const { uuid,phaseId } = req.params; 
     const { phases } = req.body; 
   
     const transaction = await sequelize.transaction();
@@ -130,7 +130,7 @@ module.exports.getAllPhases = async (req, res) => {
   
       // Loop through each phase to update
       for (const phaseData of phases) {
-        const { phaseId, name, startDate, endDate, status, deliverables } = phaseData;
+        const { name, startDate, endDate, status, deliverables } = phaseData;
   
         // Validate phase data
         const { error: phaseError } = validatePhase({ name, startDate, endDate, status });
@@ -187,8 +187,7 @@ module.exports.getAllPhases = async (req, res) => {
   };
   
   module.exports.deletePhase = async (req, res) => {
-    const { uuid } = req.params;
-    const { phaseId } = req.body;
+    const { uuid,phaseId } = req.params;
   
     try {
       // Find the project
