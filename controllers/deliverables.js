@@ -79,6 +79,49 @@ module.exports.getDeliverableById = async (req, res) => {
         res.status(500).json({ message: 'Failed to fetch deliverable', error: error.message });
     }
 };
+module.exports.getAllDeliverablesInProject = async (req, res) => {
+    const { uuid }  = req.params;
+
+    try {
+        // Find the project first
+        const project = await Project.findOne({ where: { uuid } });
+        if (!project) return res.status(404).json({ message: 'Project not found' });
+
+        // Find all phases in the project
+        const phases = await Phase.findAll({ 
+            where: { projectId: project.uuid }
+        });
+
+        // If no phases exist
+        if (phases.length === 0) {
+            return res.status(200).json([]);
+        }
+
+        // Collect deliverables for each phase
+        let deliverables = [];
+        for (const phase of phases) {
+            const phaseDeliverables = await Deliverable.findAll({ 
+                where: { phaseId: phase.uuid },
+                raw: true 
+            });
+
+            // Append phase name to each deliverable
+            const deliverableWithPhaseName = phaseDeliverables.map(deliverable => ({
+                ...deliverable,
+                phaseName: phase.name
+            }));
+
+            deliverables.push(...deliverableWithPhaseName);
+        }
+
+        res.status(200).json(deliverables);
+    } catch (error) {
+        res.status(500).json({ 
+            message: 'Failed to fetch project deliverables', 
+            error: error.message 
+        });
+    }
+};
 
 // Update Deliverable
 module.exports.updateDeliverable = async (req, res) => {
